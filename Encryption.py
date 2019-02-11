@@ -24,7 +24,6 @@ class Cipher_Public_RSA:
         self.key = RSA.importKey(key_bytes)
         self.cipher = PKCS1_OAEP.new(self.key)
     def encrypt(self, text):
-        """encrypt data using public key"""
         if isinstance(text, str):
             bytes_obj =  self.cipher.encrypt(text.encode('utf-8'))
             return str(base64.b64encode(bytes_obj),'utf-8')

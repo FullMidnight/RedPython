@@ -11,32 +11,28 @@ import os
 
 class IPScan():
     def __init__(self):
-        setdefaulttimeout(0.25)
+        setdefaulttimeout(0.10)
         self.open_ports = []
         self.ports = list(range(0,1000)) 
 
-    def scan_single_ip(self, ip):
-        return self._host(ipaddress.IPv4Address(ip))
-    def scan_range_of_ip(self, start_ip, end_ip):
+    def scan_ips(self, start_ip, end_ip):
         start_ip = ipaddress.IPv4Address(start_ip)
         end_ip = ipaddress.IPv4Address(end_ip)
         results = []
         for ip in range(int(start_ip), int(end_ip)):
-            results.append(self._host(ipaddress.IPv4Address(ip)))
+            results.append(self.host(ipaddress.IPv4Address(ip)))
         return results
-    def network(self, network_expression):
-        """iterate scan through ip network"""
+    def network_scan(self, network_expression):
         results = []
         for ip in ipaddress.IPv4Network(network_expression):
             ip = str(ip)
-            results.append(self._host(ip))
+            results.append(self.host(ip))
         return results
 
-    def port(self, ip, port):
-        """scan ports for an ip, result is the connection result, 0 indicates success"""
+    def port_check(self, ip, port):
         try:
             sock = socket.socket()
-            sock.settimeout(0.25)
+            sock.settimeout(0.10)
             result = sock.connect_ex((ip, port))
             try:
                 if result == 0:
@@ -50,17 +46,20 @@ class IPScan():
         except:
             self.open_ports.append("networking failed for port {0} : {1}".format(str(port), e))
 
-    def _host(self, ip):
-        """iterate scan through min and max ports for single ip"""
+    def scan_host(self, ip):
         _host_temp = str(ip)
         returns = {}
         returns['_hostname'] = socket.getfqdn(_host_temp)
         returns['ipAddress'] = _host_temp
         self.threads = []
         pool = ThreadPool(10) 
-        results = pool.starmap(self.port, zip(itertools.repeat(_host_temp), self.ports))
+        results = pool.starmap(self.port_check, zip(itertools.repeat(_host_temp), self.ports))
         pool.close() 
         pool.join()
         self.open_ports.sort()
         returns['openPorts'] = self.open_ports
         return returns
+
+    def set_ports(self, ports):
+        self.ports = ports
+        return None
